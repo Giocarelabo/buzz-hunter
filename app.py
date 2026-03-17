@@ -83,7 +83,7 @@ def login():
 
         if user == USER_ID and pw == PASSWORD:
             session["logged_in"] = True
-            return redirect(url_for("home"))
+            return redirect(url_for("https://note.com/giocarelabo_1022/n/n9d85f96b94ac"))
 
     return render_template("login.html")
 
@@ -91,7 +91,7 @@ def login():
 @app.route("/logout")
 def logout():
     session.clear()
-    return redirect(url_for("home"))
+    return redirect(url_for("https://note.com/giocarelabo_1022/n/n9d85f96b94ac"))
 
 
 if __name__ == "__main__":
