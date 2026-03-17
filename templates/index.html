@@ -1,88 +1,86 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Buzz Hunter</title>
+    <meta charset="UTF-8">
+    <title>Buzz Hunter</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-bottom: 20px;
+            cursor: pointer;
+        }
+        .card {
+            background: #fff;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        textarea {
+            width: 100%;
+            margin-top: 10px;
+        }
+        .copy-btn {
+            margin-top: 10px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        a {
+            display: inline-block;
+            margin-top: 10px;
+        }
+    </style>
 
-<style>
-body {
-    font-family: sans-serif;
-    padding: 15px;
-    background: #f5f5f5;
-}
-
-.card {
-    background: white;
-    padding: 15px;
-    margin-bottom: 20px;
-    border-radius: 10px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-
-button {
-    padding: 10px;
-    margin-top: 10px;
-    width: 100%;
-    border: none;
-    border-radius: 5px;
-    background: black;
-    color: white;
-}
-</style>
-
+    <script>
+        function copyText(text) {
+            navigator.clipboard.writeText(text);
+            alert("コピーしました！");
+        }
+    </script>
 </head>
-
 <body>
 
-<h1>🔥 Buzz Hunter</h1>
+    <h1>🔥 Buzz Hunter</h1>
 
-<form method="POST">
-<button type="submit">トレンドを取得</button>
-</form>
+    <form method="POST">
+        <button type="submit">トレンド取得</button>
+    </form>
 
-<hr>
+    {% for item in ideas %}
 
-{% for item in ideas %}
+    <div class="card">
+        <h3>{{ item.trend }}</h3>
 
-<div class="card">
+        <p>副業アイデア：{{ item.idea }}</p>
 
-<h2>{{ item.trend }}</h2>
+        <p>
+            メルカリ仕入れ目安：{{ item.m_price }}円<br>
+            Amazon販売目安：{{ item.a_price }}円<br>
+            想定利益：{{ item.profit }}円
+        </p>
 
-<p>副業アイデア → {{ item.idea }}</p>
+        <a href="{{ item.mercari_url }}" target="_blank">メルカリで見る</a><br>
+        <a href="{{ item.amazon_url }}" target="_blank">Amazonで見る</a>
 
-<p>
-メルカリ価格：{{ item.m_price }}円<br>
-Amazon価格：{{ item.a_price }}円<br>
-<strong>想定利益：+{{ item.profit }}円</strong>
-</p>
+        <textarea rows="6">{{ item.post }}</textarea>
 
-<a href="{{ item.mercari_url }}" target="_blank">🛍 メルカリ</a><br>
-<a href="{{ item.amazon_url }}" target="_blank">🛒 Amazon</a>
+        <button class="copy-btn" onclick="copyText(`{{ item.post }}`)">投稿文コピー</button>
+    </div>
 
-<br><br>
+    {% endfor %}
 
-<textarea rows="6" style="width:100%">{{ item.post }}</textarea>
+    <hr>
 
-<button onclick="copyText(this)">📋 コピー</button>
-
-</div>
-
-{% endfor %}
-
-<hr>
-
-<button onclick="location.href='https://note.com/'">
-👉 続きを使う（有料版はこちら）
-</button>
-
-<script>
-function copyText(btn){
-    let textarea = btn.previousElementSibling
-    textarea.select()
-    document.execCommand("copy")
-    alert("コピーしました！")
-}
-</script>
+    <a href="/premium">👉 続きを見る（有料）</a>
 
 </body>
 </html>

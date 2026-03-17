@@ -3,12 +3,13 @@ from flask import Flask, render_template, request, session, redirect, url_for
 app = Flask(__name__)
 app.secret_key = "secret_key_123"
 
-USER_ID = "admin"
-PASSWORD = "1234"
+USER_ID = "buyer"
+PASSWORD = "buzz123"
 
 @app.route("/", methods=["GET", "POST"])
 def home():
 
+    # 1回使った人はログインへ
     if "logged_in" not in session and session.get("used"):
         return redirect(url_for("login"))
 
@@ -16,6 +17,7 @@ def home():
 
     if request.method == "POST":
 
+        # 未ログインなら1回使った扱い
         if "logged_in" not in session:
             session["used"] = True
 
@@ -83,15 +85,24 @@ def login():
 
         if user == USER_ID and pw == PASSWORD:
             session["logged_in"] = True
-            return redirect(url_for("https://note.com/giocarelabo_1022/n/n9d85f96b94ac"))
+            return redirect("/")  # ログイン後はトップへ
 
     return render_template("login.html")
+
+
+@app.route("/premium")
+def premium():
+    if "logged_in" not in session:
+        return redirect("/login")
+
+    # noteへ飛ばす
+    return redirect("https://note.com/giocarelabo_1022/n/n9d85f96b94ac")
 
 
 @app.route("/logout")
 def logout():
     session.clear()
-    return redirect(url_for("https://note.com/giocarelabo_1022/n/n9d85f96b94ac"))
+    return redirect("/")
 
 
 if __name__ == "__main__":
