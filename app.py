@@ -1,4 +1,6 @@
 from flask import Flask, render_template, request, session, redirect, url_for
+import requests
+import xml.etree.ElementTree as ET
 
 app = Flask(__name__)
 app.secret_key = "secret_key_123"
@@ -9,7 +11,7 @@ PASSWORD = "buzz123"
 @app.route("/", methods=["GET", "POST"])
 def home():
 
-    # 1回使った人はログインへ
+    # 1回使ったらログインへ
     if "logged_in" not in session and session.get("used"):
         return redirect(url_for("login"))
 
@@ -17,11 +19,22 @@ def home():
 
     if request.method == "POST":
 
-        # 未ログインなら1回使った扱い
         if "logged_in" not in session:
             session["used"] = True
 
-        trends = ["暗殺教室", "WBC", "地震"]
+        # 🔥 Googleトレンド取得
+        url = "https://trends.google.com/trending/rss?geo=JP"
+        response = requests.get(url)
+        root = ET.fromstring(response.content)
+
+        trends = []
+
+        for item in root.iter("item"):
+            title = item.find("title").text
+            trends.append(title)
+
+            if len(trends) >= 5:
+                break
 
         for trend in trends:
 
@@ -32,7 +45,7 @@ def home():
                 m_price = 2500
                 a_price = 3800
 
-            elif "WBC" in trend:
+            elif "野球" in trend or "WBC" in trend:
                 idea = "野球グッズ"
                 mercari_kw = "野球 グッズ"
                 amazon_kw = "野球 グッズ"
@@ -40,7 +53,7 @@ def home():
                 a_price = 4500
 
             else:
-                idea = "アニメグッズ"
+                idea = "トレンドグッズ"
                 mercari_kw = trend + " グッズ"
                 amazon_kw = trend + " グッズ"
                 m_price = 2800
@@ -85,7 +98,7 @@ def login():
 
         if user == USER_ID and pw == PASSWORD:
             session["logged_in"] = True
-            return redirect("/")  # ログイン後はトップへ
+            return redirect("/")
 
     return render_template("login.html")
 
@@ -95,7 +108,6 @@ def premium():
     if "logged_in" not in session:
         return redirect("/login")
 
-    # noteへ飛ばす
     return redirect("https://note.com/giocarelabo_1022/n/n9d85f96b94ac")
 
 
