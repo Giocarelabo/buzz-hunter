@@ -1,9 +1,11 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Buzz Hunter</title>
 
-    <!-- PWA設定 -->
+    <!-- PWA -->
     <link rel="manifest" href="/manifest.json">
 
 </head>
@@ -23,8 +25,10 @@
         <p>販売：{{ idea.a_price }}円</p>
         <p>利益：{{ idea.profit }}円</p>
 
-        <a href="{{ idea.mercari_url }}" target="_blank">メルカリ</a><br>
-        <a href="{{ idea.amazon_url }}" target="_blank">Amazon</a>
+        <p>
+            <a href="{{ idea.mercari_url }}" target="_blank">メルカリで見る</a><br>
+            <a href="{{ idea.amazon_url }}" target="_blank">Amazonで見る</a>
+        </p>
 
         <pre>{{ idea.post }}</pre>
     {% endfor %}
@@ -33,7 +37,12 @@
     <script>
     if ("serviceWorker" in navigator) {
         navigator.serviceWorker.register("/service-worker.js")
-        .then(() => console.log("PWA Ready"));
+        .then(function() {
+            console.log("Service Worker Registered");
+        })
+        .catch(function(error) {
+            console.log("Service Worker Error:", error);
+        });
     }
     </script>
 
