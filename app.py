@@ -5,27 +5,20 @@ import os
 app = Flask(__name__)
 app.secret_key = "secret_key_123"
 
-# 擬似トレンド生成（売れる系）
 def get_trends():
 
-    base = [
-        "WBC", "地震", "花粉", "新生活", "入学", "卒業",
-        "ダイエット", "筋トレ", "美容", "節約",
-        "防災", "キャンプ", "旅行", "桜"
+    trends_pool = [
+        "大谷翔平", "WBC 日本代表", "鬼滅の刃",
+        "呪術廻戦", "ワンピース", "ポケモンカード",
+        "ちいかわ", "スターバックス 新作",
+        "ユニクロ 新作", "無印良品 人気商品",
+        "ニンテンドースイッチ", "PS5",
+        "東京ディズニーランド", "USJ",
+        "地震 防災グッズ", "花粉症対策グッズ",
+        "キャンプ用品", "車中泊グッズ"
     ]
 
-    sub = [
-        "グッズ", "アイテム", "おすすめ", "人気",
-        "便利", "最新", "2026", "ランキング"
-    ]
-
-    trends = []
-
-    for _ in range(5):
-        trend = random.choice(base) + " " + random.choice(sub)
-        trends.append(trend)
-
-    return trends
+    return random.sample(trends_pool, 5)
 
 @app.route("/", methods=["GET", "POST"])
 def home():
@@ -42,12 +35,17 @@ def home():
             mercari_kw = trend
             amazon_kw = trend
             m_price = random.randint(1500, 3000)
-            a_price = m_price + random.randint(800, 2000)
+            a_price = m_price + random.randint(1000, 2500)
             profit = a_price - m_price
 
             post = f"""今トレンドの「{trend}」🔥
 
 実はこれ、物販チャンスです。
+
+狙い目👇
+・関連グッズ
+・限定商品
+・トレンド便乗
 
 今のうちにチェックで利益につながる可能性あり💰
 
