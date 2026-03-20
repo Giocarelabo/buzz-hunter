@@ -1,19 +1,28 @@
-from flask import Flask, render_template, request, session, redirect, url_for, send_from_directory
+from flask import Flask, render_template, request
+from pytrends.request import TrendReq
+import requests
+from bs4 import BeautifulSoup
 import os
 
 app = Flask(__name__)
 app.secret_key = "secret_key_123"
 
-# --- PWA用 ---
-@app.route('/manifest.json')
-def manifest():
-    return send_from_directory('.', 'manifest.json')
+def get_google_trends():
+    pytrends = TrendReq(hl='ja-JP', tz=540)
+    trends = pytrends.trending_searches(pn='japan')[0:5]
+    return list(trends)
 
-@app.route('/service-worker.js')
-def sw():
-    return send_from_directory('.', 'service-worker.js')
+def get_yahoo_trends():
+    url = "https://search.yahoo.co.jp/realtime"
+    res = requests.get(url)
+    soup = BeautifulSoup(res.text, "html.parser")
 
-# --- メイン ---
+    trends = []
+    for item in soup.select("div.sw-Card__title")[:5]:
+        trends.append(item.text)
+
+    return trends
+
 @app.route("/", methods=["GET", "POST"])
 def home():
 
@@ -21,45 +30,34 @@ def home():
 
     if request.method == "POST":
 
-        trends = ["暗殺教室", "WBC", "地震"]
+        trends = []
+
+        try:
+            trends += get_google_trends()
+        except:
+            pass
+
+        try:
+            trends += get_yahoo_trends()
+        except:
+            pass
+
+        trends = list(set(trends))[:5]
 
         for trend in trends:
 
-            if "地震" in trend:
-                idea = "防災グッズ"
-                mercari_kw = "防災グッズ"
-                amazon_kw = "防災グッズ"
-                m_price = 2500
-                a_price = 3800
-
-            elif "WBC" in trend:
-                idea = "野球グッズ"
-                mercari_kw = "野球 グッズ"
-                amazon_kw = "野球 グッズ"
-                m_price = 3000
-                a_price = 4500
-
-            else:
-                idea = "アニメグッズ"
-                mercari_kw = trend + " グッズ"
-                amazon_kw = trend + " グッズ"
-                m_price = 2800
-                a_price = 4200
-
+            idea = "関連グッズ"
+            mercari_kw = trend + " グッズ"
+            amazon_kw = trend + " グッズ"
+            m_price = 2500
+            a_price = 3800
             profit = a_price - m_price
 
             post = f"""今トレンドの「{trend}」🔥
 
 実はこれ、物販チャンスです。
 
-狙い目👇
-・関連グッズ
-・限定商品
-・トレンド便乗
-
 今のうちにチェックで利益につながる可能性あり💰
-
-あなたなら何を仕入れますか？🤔
 
 #副業 #せどり #物販"""
 
@@ -76,7 +74,6 @@ def home():
 
     return render_template("index.html", ideas=ideas)
 
-# --- 起動設定（Render対応） ---
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
