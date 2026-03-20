@@ -1,43 +1,93 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Buzz Hunter</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buzz Hunter</title>
 
-    <!-- PWA -->
-    <link rel="manifest" href="/manifest.json">
+<link rel="manifest" href="/manifest.json">
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #f5f7fa;
+    margin: 0;
+    padding: 10px;
+}
+
+h1 {
+    text-align: center;
+}
+
+button {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    background: #007bff;
+    color: white;
+    font-size: 16px;
+    margin-top: 10px;
+}
+
+.card {
+    background: white;
+    padding: 15px;
+    margin: 15px 0;
+    border-radius: 15px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.link-btn {
+    display: block;
+    text-align: center;
+    margin-top: 8px;
+    padding: 10px;
+    background: #28a745;
+    color: white;
+    border-radius: 10px;
+    text-decoration: none;
+}
+
+textarea {
+    width: 100%;
+    border-radius: 10px;
+    padding: 10px;
+    margin-top: 10px;
+}
+</style>
+
 </head>
 <body>
 
-<h1>Buzz Hunter</h1>
+<h1>🔥 Buzz Hunter</h1>
 
 <form method="POST">
-    <button type="submit">トレンド取得</button>
+    <button type="submit">トレンド取得する</button>
 </form>
 
 {% for idea in ideas %}
-<hr>
+
+<div class="card">
 
 <h2>{{ idea.trend }}</h2>
-<p>ジャンル：{{ idea.idea }}</p>
-<p>仕入れ：{{ idea.m_price }}円</p>
-<p>販売：{{ idea.a_price }}円</p>
-<p>利益：{{ idea.profit }}円</p>
 
-<p>
-<a href="{{ idea.mercari_url }}" target="_blank">メルカリ</a><br>
-<a href="{{ idea.amazon_url }}" target="_blank">Amazon</a>
-</p>
+<p>📦 ジャンル：{{ idea.idea }}</p>
+<p>💰 仕入れ：{{ idea.m_price }}円</p>
+<p>💵 販売：{{ idea.a_price }}円</p>
+<p>🔥 利益：{{ idea.profit }}円</p>
 
-<!-- 投稿文 -->
-<textarea id="post{{ loop.index }}" rows="8" cols="50">{{ idea.post }}</textarea><br>
+<a class="link-btn" href="{{ idea.mercari_url }}" target="_blank">メルカリで見る</a>
+<a class="link-btn" href="{{ idea.amazon_url }}" target="_blank">Amazonで見る</a>
 
-<button onclick="copyText('post{{ loop.index }}')">コピー</button>
+<textarea id="post{{ loop.index }}" rows="6">{{ idea.post }}</textarea>
+
+<button onclick="copyText('post{{ loop.index }}')">コピーする</button>
+
+</div>
 
 {% endfor %}
 
-<!-- コピー機能 -->
 <script>
 function copyText(id) {
     const text = document.getElementById(id);
@@ -47,7 +97,6 @@ function copyText(id) {
 }
 </script>
 
-<!-- Service Worker -->
 <script>
 if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("/service-worker.js")
