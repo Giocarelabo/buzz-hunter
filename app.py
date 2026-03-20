@@ -5,20 +5,30 @@ import os
 app = Flask(__name__)
 app.secret_key = "secret_key_123"
 
+# --- トレンド生成（売れる＋具体ワード） ---
 def get_trends():
 
-    trends_pool = [
-        "大谷翔平", "WBC 日本代表", "鬼滅の刃",
-        "呪術廻戦", "ワンピース", "ポケモンカード",
-        "ちいかわ", "スターバックス 新作",
-        "ユニクロ 新作", "無印良品 人気商品",
-        "ニンテンドースイッチ", "PS5",
-        "東京ディズニーランド", "USJ",
-        "地震 防災グッズ", "花粉症対策グッズ",
-        "キャンプ用品", "車中泊グッズ"
+    base = [
+        "大谷翔平", "鬼滅の刃", "呪術廻戦", "ワンピース",
+        "ポケモンカード", "ちいかわ", "PS5",
+        "ニンテンドースイッチ", "スタバ新作",
+        "ユニクロ新作", "無印良品",
+        "地震 防災", "花粉症", "キャンプ", "旅行"
     ]
 
-    return random.sample(trends_pool, 5)
+    sub = [
+        "グッズ", "限定", "コラボ", "最新",
+        "人気", "レア", "再販"
+    ]
+
+    trends = []
+
+    for _ in range(5):
+        trend = random.choice(base) + " " + random.choice(sub)
+        trends.append(trend)
+
+    return trends
+
 
 @app.route("/", methods=["GET", "POST"])
 def home():
@@ -34,18 +44,18 @@ def home():
             idea = "関連グッズ"
             mercari_kw = trend
             amazon_kw = trend
+
             m_price = random.randint(1500, 3000)
             a_price = m_price + random.randint(1000, 2500)
             profit = a_price - m_price
 
-            post = f"""今トレンドの「{trend}」🔥
+            post = f"""【これ狙い目です】
 
-実はこれ、物販チャンスです。
+今トレンドの「{trend}」🔥
 
-狙い目👇
-・関連グッズ
-・限定商品
-・トレンド便乗
+・仕入れ：約{m_price}円
+・販売：約{a_price}円
+・利益：+{profit}円
 
 今のうちにチェックで利益につながる可能性あり💰
 
@@ -63,6 +73,7 @@ def home():
             })
 
     return render_template("index.html", ideas=ideas)
+
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
