@@ -1,27 +1,18 @@
 from flask import Flask, render_template, request
 from pytrends.request import TrendReq
-import requests
-from bs4 import BeautifulSoup
 import os
 
 app = Flask(__name__)
 app.secret_key = "secret_key_123"
 
-def get_google_trends():
-    pytrends = TrendReq(hl='ja-JP', tz=540)
-    trends = pytrends.trending_searches(pn='japan')[0:5]
-    return list(trends)
-
-def get_yahoo_trends():
-    url = "https://search.yahoo.co.jp/realtime"
-    res = requests.get(url)
-    soup = BeautifulSoup(res.text, "html.parser")
-
-    trends = []
-    for item in soup.select("div.sw-Card__title")[:5]:
-        trends.append(item.text)
-
-    return trends
+def get_trends():
+    try:
+        pytrends = TrendReq(hl='ja-JP', tz=540)
+        trends = pytrends.trending_searches(pn='japan')[0:5]
+        return list(trends)
+    except:
+        # 失敗時の保険
+        return ["話題の商品", "人気アイテム", "トレンドグッズ"]
 
 @app.route("/", methods=["GET", "POST"])
 def home():
@@ -30,19 +21,7 @@ def home():
 
     if request.method == "POST":
 
-        trends = []
-
-        try:
-            trends += get_google_trends()
-        except:
-            pass
-
-        try:
-            trends += get_yahoo_trends()
-        except:
-            pass
-
-        trends = list(set(trends))[:5]
+        trends = get_trends()
 
         for trend in trends:
 
