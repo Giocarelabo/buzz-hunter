@@ -1,30 +1,32 @@
 from flask import Flask, render_template, request
-import requests
-import xml.etree.ElementTree as ET
+import random
 import os
 
 app = Flask(__name__)
 app.secret_key = "secret_key_123"
 
-# --- GoogleトレンドRSS ---
+# 擬似トレンド生成（売れる系）
 def get_trends():
-    try:
-        url = "https://trends.google.com/trends/trendingsearches/daily/rss?geo=JP"
-        res = requests.get(url, timeout=5)
 
-        root = ET.fromstring(res.content)
+    base = [
+        "WBC", "地震", "花粉", "新生活", "入学", "卒業",
+        "ダイエット", "筋トレ", "美容", "節約",
+        "防災", "キャンプ", "旅行", "桜"
+    ]
 
-        trends = []
-        for item in root.findall(".//item")[:5]:
-            title = item.find("title").text
-            trends.append(title)
+    sub = [
+        "グッズ", "アイテム", "おすすめ", "人気",
+        "便利", "最新", "2026", "ランキング"
+    ]
 
-        return trends
+    trends = []
 
-    except:
-        return ["人気商品", "話題グッズ", "注目アイテム"]
+    for _ in range(5):
+        trend = random.choice(base) + " " + random.choice(sub)
+        trends.append(trend)
 
-# --- メイン ---
+    return trends
+
 @app.route("/", methods=["GET", "POST"])
 def home():
 
@@ -37,20 +39,15 @@ def home():
         for trend in trends:
 
             idea = "関連グッズ"
-            mercari_kw = trend + " グッズ"
-            amazon_kw = trend + " グッズ"
-            m_price = 2500
-            a_price = 3800
+            mercari_kw = trend
+            amazon_kw = trend
+            m_price = random.randint(1500, 3000)
+            a_price = m_price + random.randint(800, 2000)
             profit = a_price - m_price
 
             post = f"""今トレンドの「{trend}」🔥
 
 実はこれ、物販チャンスです。
-
-狙い目👇
-・関連グッズ
-・限定商品
-・トレンド便乗
 
 今のうちにチェックで利益につながる可能性あり💰
 
@@ -69,7 +66,6 @@ def home():
 
     return render_template("index.html", ideas=ideas)
 
-# --- Render対応 ---
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
