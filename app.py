@@ -1,37 +1,27 @@
 from flask import Flask, render_template, request, session, redirect, url_for, send_from_directory
-import requests
-import xml.etree.ElementTree as ET
+import os
 
 app = Flask(__name__)
 app.secret_key = "secret_key_123"
 
-USER_ID = "buyer"
-PASSWORD = "buzz123"
+# --- PWA用 ---
+@app.route('/manifest.json')
+def manifest():
+    return send_from_directory('.', 'manifest.json')
 
+@app.route('/service-worker.js')
+def sw():
+    return send_from_directory('.', 'service-worker.js')
+
+# --- メイン ---
 @app.route("/", methods=["GET", "POST"])
 def home():
-
-    if "logged_in" not in session and session.get("used"):
-        return redirect(url_for("login"))
 
     ideas = []
 
     if request.method == "POST":
 
-        if "logged_in" not in session:
-            session["used"] = True
-
-        url = "https://trends.google.com/trending/rss?geo=JP"
-        response = requests.get(url)
-        root = ET.fromstring(response.content)
-
-        trends = []
-
-        for item in root.iter("item"):
-            title = item.find("title").text
-            trends.append(title)
-            if len(trends) >= 5:
-                break
+        trends = ["暗殺教室", "WBC", "地震"]
 
         for trend in trends:
 
@@ -42,7 +32,7 @@ def home():
                 m_price = 2500
                 a_price = 3800
 
-            elif "野球" in trend or "WBC" in trend:
+            elif "WBC" in trend:
                 idea = "野球グッズ"
                 mercari_kw = "野球 グッズ"
                 amazon_kw = "野球 グッズ"
@@ -50,7 +40,7 @@ def home():
                 a_price = 4500
 
             else:
-                idea = "トレンドグッズ"
+                idea = "アニメグッズ"
                 mercari_kw = trend + " グッズ"
                 amazon_kw = trend + " グッズ"
                 m_price = 2800
@@ -58,17 +48,20 @@ def home():
 
             profit = a_price - m_price
 
-            post = f"""【今バズってる】{trend}🔥
+            post = f"""今トレンドの「{trend}」🔥
 
-これ、せどりチャンスです。
+実はこれ、物販チャンスです。
 
-✔ メルカリ仕入れ目安：{m_price}円
-✔ Amazon販売目安：{a_price}円
-✔ 想定利益：+{profit}円
+狙い目👇
+・関連グッズ
+・限定商品
+・トレンド便乗
 
-今はトレンドに乗るだけで売れる可能性あり。
+今のうちにチェックで利益につながる可能性あり💰
 
-#せどり #副業"""
+あなたなら何を仕入れますか？🤔
+
+#副業 #せどり #物販"""
 
             ideas.append({
                 "trend": trend,
@@ -83,32 +76,7 @@ def home():
 
     return render_template("index.html", ideas=ideas)
 
-
-@app.route("/login", methods=["GET", "POST"])
-def login():
-    if request.method == "POST":
-        user = request.form["user"]
-        pw = request.form["pw"]
-
-        if user == USER_ID and pw == PASSWORD:
-            session["logged_in"] = True
-            return redirect("/")
-
-    return render_template("login.html")
-
-
-# PWA用
-@app.route('/manifest.json')
-def manifest():
-    return send_from_directory('.', 'manifest.json')
-
-@app.route('/service-worker.js')
-def sw():
-    return send_from_directory('.', 'service-worker.js')
-
-
-import os
-
+# --- 起動設定（Render対応） ---
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
