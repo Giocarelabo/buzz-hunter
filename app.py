@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, session, redirect, url_for
+from flask import Flask, render_template, request, session, redirect, url_for, send_from_directory
 import requests
 import xml.etree.ElementTree as ET
 
@@ -11,7 +11,6 @@ PASSWORD = "buzz123"
 @app.route("/", methods=["GET", "POST"])
 def home():
 
-    # 1回使ったらログインへ
     if "logged_in" not in session and session.get("used"):
         return redirect(url_for("login"))
 
@@ -22,7 +21,6 @@ def home():
         if "logged_in" not in session:
             session["used"] = True
 
-        # 🔥 Googleトレンド取得
         url = "https://trends.google.com/trending/rss?geo=JP"
         response = requests.get(url)
         root = ET.fromstring(response.content)
@@ -32,7 +30,6 @@ def home():
         for item in root.iter("item"):
             title = item.find("title").text
             trends.append(title)
-
             if len(trends) >= 5:
                 break
 
@@ -61,7 +58,6 @@ def home():
 
             profit = a_price - m_price
 
-            # 🔥 投稿文（強化版）
             post = f"""【今バズってる】{trend}🔥
 
 これ、せどりチャンスです。
@@ -72,16 +68,7 @@ def home():
 
 今はトレンドに乗るだけで売れる可能性あり。
 
-特に👇
-・関連グッズ
-・限定商品
-・今しか手に入らないもの
-
-は狙い目です。
-
-早い人が勝ちます💰
-
-#せどり #副業 #物販"""
+#せどり #副業"""
 
             ideas.append({
                 "trend": trend,
@@ -110,18 +97,14 @@ def login():
     return render_template("login.html")
 
 
-@app.route("/premium")
-def premium():
-    if "logged_in" not in session:
-        return redirect("/login")
+# PWA用
+@app.route('/manifest.json')
+def manifest():
+    return send_from_directory('.', 'manifest.json')
 
-    return redirect("https://note.com/giocarelabo_1022/n/n9d85f96b94ac")
-
-
-@app.route("/logout")
-def logout():
-    session.clear()
-    return redirect("/")
+@app.route('/service-worker.js')
+def sw():
+    return send_from_directory('.', 'service-worker.js')
 
 
 if __name__ == "__main__":
