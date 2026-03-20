@@ -55,6 +55,15 @@ textarea {
     padding: 10px;
     margin-top: 10px;
 }
+
+/* ローディング */
+#loading {
+    display: none;
+    text-align: center;
+    margin-top: 20px;
+    font-size: 14px;
+    color: #555;
+}
 </style>
 
 </head>
@@ -62,9 +71,14 @@ textarea {
 
 <h1>🔥 Buzz Hunter</h1>
 
-<form method="POST">
+<form method="POST" onsubmit="showLoading()">
     <button type="submit">トレンド取得する</button>
 </form>
+
+<!-- ローディング表示 -->
+<div id="loading">
+    ⏳ 読み込み中です…（初回は10〜30秒かかる場合があります）
+</div>
 
 {% for idea in ideas %}
 
@@ -82,7 +96,9 @@ textarea {
 
 <textarea id="post{{ loop.index }}" rows="6">{{ idea.post }}</textarea>
 
-<button onclick="copyText('post{{ loop.index }}')">コピーする</button>
+<button type="button" onclick="copyText('post{{ loop.index }}')">
+コピーする
+</button>
 
 </div>
 
@@ -94,6 +110,10 @@ function copyText(id) {
     text.select();
     document.execCommand("copy");
     alert("コピーしました！");
+}
+
+function showLoading() {
+    document.getElementById("loading").style.display = "block";
 }
 </script>
 
