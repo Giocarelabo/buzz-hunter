@@ -1,86 +1,41 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html>
 <head>
-    <meta charset="UTF-8">
     <title>Buzz Hunter</title>
-    <style>
-        body {
-            font-family: sans-serif;
-            padding: 20px;
-            background: #f5f5f5;
-        }
-        h1 {
-            color: #333;
-        }
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            margin-bottom: 20px;
-            cursor: pointer;
-        }
-        .card {
-            background: #fff;
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        textarea {
-            width: 100%;
-            margin-top: 10px;
-        }
-        .copy-btn {
-            margin-top: 10px;
-            padding: 5px 10px;
-            cursor: pointer;
-        }
-        a {
-            display: inline-block;
-            margin-top: 10px;
-        }
-    </style>
 
-    <script>
-        function copyText(text) {
-            navigator.clipboard.writeText(text);
-            alert("コピーしました！");
-        }
-    </script>
+    <!-- PWA設定 -->
+    <link rel="manifest" href="/manifest.json">
+
 </head>
 <body>
 
-    <h1>🔥 Buzz Hunter</h1>
+    <h1>Buzz Hunter</h1>
 
     <form method="POST">
         <button type="submit">トレンド取得</button>
     </form>
 
-    {% for item in ideas %}
+    {% for idea in ideas %}
+        <hr>
+        <h2>{{ idea.trend }}</h2>
+        <p>ジャンル：{{ idea.idea }}</p>
+        <p>仕入れ：{{ idea.m_price }}円</p>
+        <p>販売：{{ idea.a_price }}円</p>
+        <p>利益：{{ idea.profit }}円</p>
 
-    <div class="card">
-        <h3>{{ item.trend }}</h3>
+        <a href="{{ idea.mercari_url }}" target="_blank">メルカリ</a><br>
+        <a href="{{ idea.amazon_url }}" target="_blank">Amazon</a>
 
-        <p>副業アイデア：{{ item.idea }}</p>
-
-        <p>
-            メルカリ仕入れ目安：{{ item.m_price }}円<br>
-            Amazon販売目安：{{ item.a_price }}円<br>
-            想定利益：{{ item.profit }}円
-        </p>
-
-        <a href="{{ item.mercari_url }}" target="_blank">メルカリで見る</a><br>
-        <a href="{{ item.amazon_url }}" target="_blank">Amazonで見る</a>
-
-        <textarea rows="6">{{ item.post }}</textarea>
-
-        <button class="copy-btn" onclick="copyText(`{{ item.post }}`)">投稿文コピー</button>
-    </div>
-
+        <pre>{{ idea.post }}</pre>
     {% endfor %}
 
-    <hr>
-
-    <a href="/premium">👉 続きを見る（有料）</a>
+    <!-- Service Worker -->
+    <script>
+    if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("/service-worker.js")
+        .then(() => console.log("PWA Ready"));
+    }
+    </script>
 
 </body>
 </html>
