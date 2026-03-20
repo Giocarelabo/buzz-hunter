@@ -5,29 +5,38 @@ import os
 app = Flask(__name__)
 app.secret_key = "secret_key_123"
 
-# --- トレンド生成（売れる＋具体ワード） ---
 def get_trends():
-
-    base = [
-        "大谷翔平", "鬼滅の刃", "呪術廻戦", "ワンピース",
-        "ポケモンカード", "ちいかわ", "PS5",
-        "ニンテンドースイッチ", "スタバ新作",
-        "ユニクロ新作", "無印良品",
-        "地震 防災", "花粉症", "キャンプ", "旅行"
-    ]
-
-    sub = [
-        "グッズ", "限定", "コラボ", "最新",
-        "人気", "レア", "再販"
-    ]
 
     trends = []
 
-    for _ in range(5):
-        trend = random.choice(base) + " " + random.choice(sub)
-        trends.append(trend)
+    anime = [
+        "鬼滅の刃 グッズ", "呪術廻戦 フィギュア",
+        "ワンピース カード", "ちいかわ グッズ"
+    ]
 
-    return trends
+    sports = [
+        "大谷翔平 グッズ", "WBC ユニフォーム",
+        "プロ野球 グッズ"
+    ]
+
+    brand = [
+        "無印良品 収納", "ユニクロ 新作",
+        "スタバ 新作"
+    ]
+
+    hobby = [
+        "ポケモンカード レア", "PS5 本体",
+        "ニンテンドースイッチ ソフト"
+    ]
+
+    life = [
+        "防災グッズ", "花粉症対策グッズ",
+        "キャンプ用品", "旅行グッズ"
+    ]
+
+    all_trends = anime + sports + brand + hobby + life
+
+    return random.sample(all_trends, 5)
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -41,17 +50,13 @@ def home():
 
         for trend in trends:
 
-            idea = "関連グッズ"
-            mercari_kw = trend
-            amazon_kw = trend
-
             m_price = random.randint(1500, 3000)
             a_price = m_price + random.randint(1000, 2500)
             profit = a_price - m_price
 
             post = f"""【これ狙い目です】
 
-今トレンドの「{trend}」🔥
+{trend} 🔥
 
 ・仕入れ：約{m_price}円
 ・販売：約{a_price}円
@@ -63,10 +68,9 @@ def home():
 
             ideas.append({
                 "trend": trend,
-                "idea": idea,
                 "post": post,
-                "mercari_url": f"https://www.mercari.com/jp/search/?keyword={mercari_kw}",
-                "amazon_url": f"https://www.amazon.co.jp/s?k={amazon_kw}",
+                "mercari_url": f"https://www.mercari.com/jp/search/?keyword={trend}",
+                "amazon_url": f"https://www.amazon.co.jp/s?k={trend}",
                 "m_price": m_price,
                 "a_price": a_price,
                 "profit": profit
