@@ -1,64 +1,28 @@
 from flask import Flask, render_template, request
-from pytrends.request import TrendReq
 import requests
-from bs4 import BeautifulSoup
+import xml.etree.ElementTree as ET
 import os
 
 app = Flask(__name__)
 app.secret_key = "secret_key_123"
 
-# --- Googleトレンド ---
-def get_google_trends():
+# --- GoogleトレンドRSS ---
+def get_trends():
     try:
-        pytrends = TrendReq(hl='ja-JP', tz=540)
-        df = pytrends.trending_searches(pn='japan')
+        url = "https://trends.google.com/trends/trendingsearches/daily/rss?geo=JP"
+        res = requests.get(url, timeout=5)
 
-        if df.empty:
-            return []
-
-        return list(df[0][:5])
-
-    except:
-        return []
-
-# --- Yahooリアルタイム（Xトレンド代替） ---
-def get_yahoo_trends():
-    try:
-        url = "https://search.yahoo.co.jp/realtime"
-        headers = {
-            "User-Agent": "Mozilla/5.0"
-        }
-        res = requests.get(url, headers=headers, timeout=5)
-        soup = BeautifulSoup(res.text, "html.parser")
+        root = ET.fromstring(res.content)
 
         trends = []
-        for item in soup.select("span.sw-Card__titleInner")[:5]:
-            trends.append(item.text.strip())
+        for item in root.findall(".//item")[:5]:
+            title = item.find("title").text
+            trends.append(title)
 
         return trends
 
     except:
-        return []
-
-# --- トレンド統合（安定版） ---
-def get_trends():
-
-    trends = []
-
-    # Google
-    trends += get_google_trends()
-
-    # Yahoo
-    trends += get_yahoo_trends()
-
-    # 重複削除
-    trends = list(set(trends))
-
-    # それでも空なら保険
-    if not trends:
-        trends = ["人気商品", "話題グッズ", "注目アイテム"]
-
-    return trends[:5]
+        return ["人気商品", "話題グッズ", "注目アイテム"]
 
 # --- メイン ---
 @app.route("/", methods=["GET", "POST"])

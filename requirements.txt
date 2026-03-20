@@ -1,5 +1,3 @@
 Flask
 gunicorn
-pytrends
 requests
-beautifulsoup4
