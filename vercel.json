@@ -1,0 +1,11 @@
+{
+  "builds": [
+    { "src": "api/trends.py", "use": "@vercel/python" },
+    { "src": "public/**", "use": "@vercel/static" }
+  ],
+  "routes": [
+    { "src": "/api/trends", "dest": "api/trends.py" },
+    { "handle": "filesystem" },
+    { "src": "/(.*)", "dest": "/public/index.html" }
+  ]
+}
