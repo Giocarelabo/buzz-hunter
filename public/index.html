@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Buzz Hunter｜利益商品発見ツール</title>
+  <style>
+    body { font-family: Arial; padding: 20px; max-width: 600px; margin: auto; }
+    h1 { font-size: 22px; }
+    .box { border: 1px solid #ddd; padding: 15px; margin-top: 15px; border-radius: 8px; }
+    button { padding: 12px; font-size: 16px; width: 100%; margin-top: 15px; }
+    .cta { background: black; color: white; text-align: center; padding: 15px; margin-top: 30px; }
+    a { color: white; text-decoration: none; }
+  </style>
+</head>
+<body>
+
+<h1>🚀 1日30分で利益商品を見つけるツール</h1>
+
+<p>
+このツールは「今売れている商品」と「想定利益」を自動で表示します。
+</p>
+
+<p style="color:red; font-weight:bold;">
+※実際にこの方法で月5万円以上の利益が出ています
+</p>
+
+<button onclick="getTrends()">🔥 トレンド商品を取得する</button>
+
+<div id="result"></div>
+
+<div class="cta">
+  <p>👇初心者でも利益が出る具体的手法はこちら</p>
+  <a href="https://note.com/giocarelabo_1022/n/n9d85f96b94ac" target="_blank">
+    ▶ 今だけ無料でノウハウを見る
+  </a>
+  <p style="font-size:12px;">
+    ※現在無料公開中（今後有料化予定）
+  </p>
+</div>
+
+<script>
+async function getTrends() {
+  const res = await fetch('/api/trends');
+  const data = await res.json();
+
+  let html = '';
+  data.forEach(item => {
+    html += `
+      <div class="box">
+        <strong>${item.trend}</strong><br><br>
+        仕入れ価格：${item.m_price}円<br>
+        販売価格：${item.a_price}円<br>
+        <strong>想定利益：${item.profit}円</strong>
+      </div>
+    `;
+  });
+
+  document.getElementById("result").innerHTML = html;
+}
+</script>
+
+</body>
+</html>
