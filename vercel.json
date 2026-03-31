@@ -1,6 +1,0 @@
-{
-  "routes": [
-    { "src": "/api/(.*)", "dest": "/api/trends.py" },
-    { "src": "/(.*)", "dest": "/public/index.html" }
-  ]
-}
