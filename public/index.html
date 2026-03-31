@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Buzz Hunter｜利益商品発見ツール</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      font-family: Arial;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+      background: #f5f5f5;
+    }
+
+    h1 {
+      font-size: 22px;
+      margin-bottom: 10px;
+    }
+
+    button.main {
+      width: 100%;
+      padding: 15px;
+      font-size: 16px;
+      margin-top: 15px;
+      background: black;
+      color: white;
+      border: none;
+      border-radius: 10px;
+    }
+
+    .card {
+      border-radius: 12px;
+      padding: 15px;
+      margin-top: 15px;
+      background: white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .profit {
+      color: red;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .copy-btn {
+      margin-top: 10px;
+      width: 100%;
+      padding: 10px;
+      background: black;
+      color: white;
+      border: none;
+      border-radius: 8px;
+    }
+
+    .share {
+      margin-top: 10px;
+      display: block;
+      text-align: center;
+      text-decoration: none;
+      padding: 10px;
+      background: #1DA1F2;
+      color: white;
+      border-radius: 8px;
+    }
+
+    .cta {
+      background: black;
+      color: white;
+      text-align: center;
+      padding: 20px;
+      margin-top: 30px;
+      border-radius: 12px;
+    }
+
+    .cta a {
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+      display: block;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>🚀 1日30分で利益商品を見つけるツール</h1>
+
+<p>
+今売れている商品と想定利益を自動表示します。
+</p>
+
+<p style="color:red; font-weight:bold;">
+※この方法で月5万円以上の利益実績あり
+</p>
+
+<button class="main" onclick="getTrends()">
+🔥 トレンド商品を取得する
+</button>
+
+<div id="result"></div>
+
+<div class="cta">
+  <p style="font-size:18px; font-weight:bold;">
+    この商品、実際に利益出てます👇
+  </p>
+
+  <a href="https://note.com/あなたのURL" target="_blank">
+    ▶ 稼ぎ方の全手順を見る（無料）
+  </a>
+
+  <p style="font-size:12px;">
+    ※今だけ無料公開中 / 後日有料化予定
+  </p>
+</div>
+
+<script>
+async function getTrends() {
+  const result = document.getElementById("result");
+  result.innerHTML = "読み込み中...";
+
+  try {
+    const res = await fetch('/api/trends');
+    const data = await res.json();
+
+    let html = '';
+
+    data.forEach((item, index) => {
+      html += `
+        <div class="card">
+          <div style="font-size:14px; color:#888;">
+            #${index+1} 人気急上昇
+          </div>
+
+          <div style="font-size:18px; font-weight:bold; margin-top:5px;">
+            ${item.trend}
+          </div>
+
+          <div style="margin-top:10px;">
+            仕入れ：${item.m_price}円 → 販売：${item.a_price}円
+          </div>
+
+          <div class="profit">
+            利益：+${item.profit}円
+          </div>
+
+          <button class="copy-btn" onclick="copyText('${item.trend}')">
+            📋 商品名をコピー
+          </button>
+
+          <a class="share"
+             href="https://twitter.com/intent/tweet?text=${encodeURIComponent(item.trend + ' が今売れてる！')}"
+             target="_blank">
+             🐦 Xでシェア
+          </a>
+        </div>
+      `;
+    });
+
+    result.innerHTML = html;
+
+  } catch (error) {
+    result.innerHTML = "エラーが発生しました";
+  }
+}
+
+function copyText(text) {
+  navigator.clipboard.writeText(text);
+  alert("コピーしました！");
+}
+</script>
+
+</body>
+</html>
