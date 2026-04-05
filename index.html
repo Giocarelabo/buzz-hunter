@@ -46,7 +46,7 @@ button.main { width:100%; padding:15px; background:black; color:white; border-ra
 <p><b>🔒 制限中</b></p>
 <p style="color:red;">この情報はロックされました</p>
 
-<a href="https://note.com/あなたのURL" target="_blank">
+<a href="https://note.com/giocarelabo_1022/n/n9d85f96b94ac" target="_blank">
 ▶ 解除はこちら（500円）
 </a>
 
@@ -66,24 +66,25 @@ button.main { width:100%; padding:15px; background:black; color:white; border-ra
 
 <script>
 
-// ===== 時間管理（完全ロック） =====
+// ===== 初期化（超重要）=====
 const LIMIT = 180;
 
-let start = localStorage.getItem("startTime");
+// 型を数値に変換（ここがバグ原因）
+let start = Number(localStorage.getItem("startTime"));
 
 if (!start) {
   start = Date.now();
   localStorage.setItem("startTime", start);
 }
 
-function checkLock(){
+// ===== ロック判定 =====
+function isLocked(){
   const now = Date.now();
   const diff = Math.floor((now - start)/1000);
-  if(diff >= LIMIT){
-    localStorage.setItem("locked","true");
-  }
+  return diff >= LIMIT;
 }
 
+// ===== タイマー =====
 function updateTimer(){
   const now = Date.now();
   const diff = Math.floor((now - start)/1000);
@@ -91,6 +92,7 @@ function updateTimer(){
 
   if(remain <= 0){
     document.getElementById("timer").innerText = "00:00";
+    localStorage.setItem("locked","true");
     document.getElementById("lockArea").style.display="block";
     return;
   }
@@ -100,18 +102,25 @@ function updateTimer(){
   document.getElementById("timer").innerText = m+":"+s;
 }
 
-setInterval(()=>{
-  checkLock();
-  updateTimer();
-},1000);
+// 常時動かす
+setInterval(updateTimer,1000);
 
-// ===== トレンド取得 =====
+// ===== トレンド取得（1回制御追加）=====
 async function getTrends(){
 
+  // ロック中なら即ブロック
   if(localStorage.getItem("locked") && !localStorage.getItem("unlocked")){
     document.getElementById("lockArea").style.display="block";
     return;
   }
+
+  // ★ ここが重要（1回制限）
+  if(localStorage.getItem("viewed") && !localStorage.getItem("unlocked")){
+    document.getElementById("lockArea").style.display="block";
+    return;
+  }
+
+  localStorage.setItem("viewed","true");
 
   const result = document.getElementById("result");
   result.innerHTML="読み込み中...";
@@ -148,12 +157,12 @@ async function getTrends(){
 
 // ===== パスワード =====
 function unlock(){
-  const correct = "buzz2026"; // ←購入者に配布
+  const correct = "buzz2026";
 
   if(document.getElementById("pass").value === correct){
     localStorage.setItem("unlocked","true");
-    alert("解除成功");
     document.getElementById("lockArea").style.display="none";
+    alert("解除成功");
   }else{
     alert("パスワード違います");
   }
