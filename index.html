@@ -24,7 +24,6 @@ a { color:white; }
 <body>
 
 <script>
-// ★ ここだけ変更
 const NOTE_URL = "https://note.com/giocarelabo_1022/n/n9d85f96b94ac";
 </script>
 
@@ -44,7 +43,8 @@ const NOTE_URL = "https://note.com/giocarelabo_1022/n/n9d85f96b94ac";
 <div id="result"></div>
 
 <div id="lock" class="lock">
-<p>🔒 続きは有料です</p>
+<p><b>🔒 閲覧制限中</b></p>
+<p>続きは購入者のみ</p>
 
 <a id="noteLock" target="_blank">▶ 解除はこちら</a>
 
@@ -61,7 +61,7 @@ const NOTE_URL = "https://note.com/giocarelabo_1022/n/n9d85f96b94ac";
 
 <script>
 
-// ===== noteリンク自動セット =====
+// ===== noteリンク =====
 document.getElementById("noteTop").href = NOTE_URL;
 document.getElementById("noteLock").href = NOTE_URL;
 document.getElementById("noteBottom").href = NOTE_URL;
@@ -77,27 +77,34 @@ if (!sessionStorage.getItem("init")) {
 
 // ===== タイマー =====
 function timer(){
+
   const start = Number(localStorage.getItem("start"));
   const now = Date.now();
   const remain = LIMIT - Math.floor((now-start)/1000);
 
   if(remain <= 0){
     document.getElementById("timer").innerText = "00:00";
-    localStorage.setItem("lock","true");
-    showLock();
+    lockUI(); // ★ここ重要
     return;
   }
 
   const m = String(Math.floor(remain/60)).padStart(2,'0');
   const s = String(remain%60).padStart(2,'0');
+
   document.getElementById("timer").innerText = m+":"+s;
 }
 
 setInterval(timer,1000);
 timer();
 
-// ===== ロック =====
-function showLock(){
+// ===== ロックUI強制 =====
+function lockUI(){
+  localStorage.setItem("lock","true");
+
+  // 結果を消す
+  document.getElementById("result").innerHTML = "";
+
+  // ロック表示
   if(!localStorage.getItem("unlock")){
     document.getElementById("lock").style.display="block";
   }
@@ -106,16 +113,18 @@ function showLock(){
 // ===== ボタン =====
 document.getElementById("btn").addEventListener("click", async () => {
 
+  // 時間 or 2回目ならロック表示（ボタンは押せる）
   if(localStorage.getItem("lock") && !localStorage.getItem("unlock")){
-    showLock();
+    lockUI();
     return;
   }
 
   if(localStorage.getItem("used") && !localStorage.getItem("unlock")){
-    showLock();
+    lockUI();
     return;
   }
 
+  // 初回実行
   localStorage.setItem("used","true");
 
   const result = document.getElementById("result");
@@ -126,13 +135,15 @@ document.getElementById("btn").addEventListener("click", async () => {
     const data = await res.json();
 
     let html = "";
+
     data.forEach((item,i)=>{
       const kw = encodeURIComponent(item.trend);
 
       html += `
       <div class="card">
-        <b>${item.trend}</b><br>
-        ${item.m_price}円 → ${item.a_price}円<br>
+        <div>#${i+1} 人気急上昇</div>
+        <div><b>${item.trend}</b></div>
+        <div>仕入れ ${item.m_price}円 → ${item.a_price}円</div>
         <div class="profit">+${item.profit}円</div>
 
         <button class="btn copy" onclick="copyText('${item.trend}')">コピー</button>
