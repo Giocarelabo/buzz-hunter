@@ -15,7 +15,7 @@ button.main { width:100%; padding:15px; background:black; color:white; border-ra
 .amazon { background:orange; }
 .mercari { background:red; }
 .lock { background:white; padding:20px; margin-top:20px; border-radius:12px; text-align:center; }
-.countdown { background:red; color:white; padding:10px; border-radius:10px; text-align:center; }
+.countdown { background:red; color:white; padding:10px; border-radius:10px; text-align:center; font-size:18px; }
 </style>
 </head>
 
@@ -35,7 +35,7 @@ button.main { width:100%; padding:15px; background:black; color:white; border-ra
 残り <span id="timer">03:00</span>
 </div>
 
-<p style="color:red;">※時間終了後は閲覧不可</p>
+<p style="color:red;">※時間終了 or 2回目でロックされます</p>
 
 <button class="main" onclick="getTrends()">🔥 トレンド取得</button>
 
@@ -43,7 +43,7 @@ button.main { width:100%; padding:15px; background:black; color:white; border-ra
 
 <!-- ロック -->
 <div id="lockArea" class="lock" style="display:none;">
-<p><b>🔒 制限中</b></p>
+<p><b>🔒 閲覧制限中</b></p>
 <p style="color:red;">この情報はロックされました</p>
 
 <a href="https://note.com/giocarelabo_1022/n/n9d85f96b94ac" target="_blank">
@@ -51,76 +51,67 @@ button.main { width:100%; padding:15px; background:black; color:white; border-ra
 </a>
 
 <br><br>
-<input type="password" id="pass">
+<input type="password" id="pass" placeholder="パスワード入力">
 <br><br>
 <button onclick="unlock()">解除</button>
 </div>
 
-<!-- 下導線 -->
-<div style="background:black;color:white;padding:20px;margin-top:20px;border-radius:12px;text-align:center;">
-<b>完全解説はこちら👇</b><br>
-<a href="https://note.com/giocarelabo_1022/n/n9d85f96b94ac" target="_blank" style="color:white;">
-▶ 稼ぎ方を見る
-</a>
-</div>
-
 <script>
 
-// ===== 初期化（超重要）=====
+// ===== 初期化 =====
 const LIMIT = 180;
 
-// 型を数値に変換（ここがバグ原因）
-let start = Number(localStorage.getItem("startTime"));
-
-if (!start) {
-  start = Date.now();
-  localStorage.setItem("startTime", start);
+// 初回のみ開始時間保存
+if (!localStorage.getItem("startTime")) {
+  localStorage.setItem("startTime", Date.now());
 }
 
-// ===== ロック判定 =====
-function isLocked(){
-  const now = Date.now();
-  const diff = Math.floor((now - start)/1000);
-  return diff >= LIMIT;
-}
-
-// ===== タイマー =====
+// ===== タイマー（完全安定版）=====
 function updateTimer(){
+
+  const start = Number(localStorage.getItem("startTime"));
   const now = Date.now();
+
   const diff = Math.floor((now - start)/1000);
   const remain = LIMIT - diff;
 
+  const timerEl = document.getElementById("timer");
+
+  if (!timerEl) return;
+
   if(remain <= 0){
-    document.getElementById("timer").innerText = "00:00";
+    timerEl.innerText = "00:00";
     localStorage.setItem("locked","true");
     document.getElementById("lockArea").style.display="block";
     return;
   }
 
-  let m = String(Math.floor(remain/60)).padStart(2,'0');
-  let s = String(remain%60).padStart(2,'0');
-  document.getElementById("timer").innerText = m+":"+s;
+  const m = String(Math.floor(remain/60)).padStart(2,'0');
+  const s = String(remain%60).padStart(2,'0');
+
+  timerEl.innerText = m + ":" + s;
 }
 
-// 常時動かす
-setInterval(updateTimer,1000);
+// 1秒ごと更新
+setInterval(updateTimer, 1000);
 
-// ===== トレンド取得（1回制御追加）=====
+// ===== トレンド取得 =====
 async function getTrends(){
 
-  // ロック中なら即ブロック
+  // 時間ロック
   if(localStorage.getItem("locked") && !localStorage.getItem("unlocked")){
     document.getElementById("lockArea").style.display="block";
     return;
   }
 
-  // ★ ここが重要（1回制限）
-  if(localStorage.getItem("viewed") && !localStorage.getItem("unlocked")){
+  // ★ 2回目ロック（ここが今回の核心）
+  if(localStorage.getItem("used") && !localStorage.getItem("unlocked")){
     document.getElementById("lockArea").style.display="block";
     return;
   }
 
-  localStorage.setItem("viewed","true");
+  // 1回使用済みにする
+  localStorage.setItem("used","true");
 
   const result = document.getElementById("result");
   result.innerHTML="読み込み中...";
@@ -137,15 +128,16 @@ async function getTrends(){
 
       html += `
       <div class="card">
-      <div>#${i+1} 人気急上昇</div>
-      <div><b>${item.trend}</b></div>
-      <div>仕入れ ${item.m_price}円 → 販売 ${item.a_price}円</div>
-      <div class="profit">利益 +${item.profit}円</div>
+        <div>#${i+1} 人気急上昇</div>
+        <div><b>${item.trend}</b></div>
+        <div>仕入れ ${item.m_price}円 → 販売 ${item.a_price}円</div>
+        <div class="profit">利益 +${item.profit}円</div>
 
-      <button class="btn copy" onclick="copyText('${item.trend}')">コピー</button>
-      <button class="btn amazon" onclick="openAmazon('${kw}')">Amazon</button>
-      <button class="btn mercari" onclick="openMercari('${kw}')">メルカリ</button>
-      </div>`;
+        <button class="btn copy" onclick="copyText('${item.trend}')">コピー</button>
+        <button class="btn amazon" onclick="openAmazon('${kw}')">Amazon</button>
+        <button class="btn mercari" onclick="openMercari('${kw}')">メルカリ</button>
+      </div>
+      `;
     });
 
     result.innerHTML = html;
@@ -157,6 +149,7 @@ async function getTrends(){
 
 // ===== パスワード =====
 function unlock(){
+
   const correct = "buzz2026";
 
   if(document.getElementById("pass").value === correct){
