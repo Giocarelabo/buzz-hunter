@@ -35,7 +35,7 @@ button.main { width:100%; padding:15px; background:black; color:white; border-ra
 残り <span id="timer">03:00</span>
 </div>
 
-<p style="color:red;">※時間終了 or 2回目でロックされます</p>
+<p style="color:red;">※1回のみ閲覧可能 / 時間経過でロック</p>
 
 <button class="main" onclick="getTrends()">🔥 トレンド取得</button>
 
@@ -51,36 +51,39 @@ button.main { width:100%; padding:15px; background:black; color:white; border-ra
 </a>
 
 <br><br>
-<input type="password" id="pass" placeholder="パスワード入力">
+<input type="password" id="pass" placeholder="パスワード">
 <br><br>
 <button onclick="unlock()">解除</button>
 </div>
 
 <script>
 
-// ===== 初期化 =====
+// ===== 完全リセット付き初期化 =====
+
+// ★ デバッグ中だけON（本番は消してOK）
+// localStorage.clear();
+
 const LIMIT = 180;
 
-// 初回のみ開始時間保存
-if (!localStorage.getItem("startTime")) {
-  localStorage.setItem("startTime", Date.now());
+// startTimeが不正なら再生成
+let start = Number(localStorage.getItem("startTime"));
+
+if (!start || isNaN(start)) {
+  start = Date.now();
+  localStorage.setItem("startTime", start);
 }
 
-// ===== タイマー（完全安定版）=====
+// ===== タイマー =====
 function updateTimer(){
 
-  const start = Number(localStorage.getItem("startTime"));
   const now = Date.now();
-
-  const diff = Math.floor((now - start)/1000);
+  const diff = Math.floor((now - start) / 1000);
   const remain = LIMIT - diff;
 
-  const timerEl = document.getElementById("timer");
-
-  if (!timerEl) return;
+  const el = document.getElementById("timer");
 
   if(remain <= 0){
-    timerEl.innerText = "00:00";
+    el.innerText = "00:00";
     localStorage.setItem("locked","true");
     document.getElementById("lockArea").style.display="block";
     return;
@@ -89,28 +92,29 @@ function updateTimer(){
   const m = String(Math.floor(remain/60)).padStart(2,'0');
   const s = String(remain%60).padStart(2,'0');
 
-  timerEl.innerText = m + ":" + s;
+  el.innerText = m + ":" + s;
 }
 
-// 1秒ごと更新
-setInterval(updateTimer, 1000);
+// 初回即実行＋1秒ごと
+updateTimer();
+setInterval(updateTimer,1000);
 
 // ===== トレンド取得 =====
 async function getTrends(){
 
-  // 時間ロック
+  // ロック状態
   if(localStorage.getItem("locked") && !localStorage.getItem("unlocked")){
     document.getElementById("lockArea").style.display="block";
     return;
   }
 
-  // ★ 2回目ロック（ここが今回の核心）
-  if(localStorage.getItem("used") && !localStorage.getItem("unlocked")){
+  // ★ 1回制限（絶対）
+  if(localStorage.getItem("used") === "true" && !localStorage.getItem("unlocked")){
     document.getElementById("lockArea").style.display="block";
     return;
   }
 
-  // 1回使用済みにする
+  // 使用済みにする
   localStorage.setItem("used","true");
 
   const result = document.getElementById("result");
