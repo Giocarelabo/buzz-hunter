@@ -12,14 +12,12 @@ body { font-family: Arial; padding:20px; max-width:600px; margin:auto; backgroun
 .main { width:100%; padding:15px; background:black; color:white; border-radius:10px; }
 .card { background:white; padding:15px; margin-top:15px; border-radius:12px; }
 .rank { color:red; font-weight:bold; }
-.profit { color:red; font-weight:bold; font-size:18px; }
-.badge { display:inline-block; background:#eee; padding:5px 10px; border-radius:20px; font-size:12px; margin-top:5px; }
+.profit { color:red; font-weight:bold; }
 .btn { width:100%; padding:10px; margin-top:8px; border:none; border-radius:8px; color:white; }
 .copy { background:black; }
 .amazon { background:orange; }
 .mercari { background:red; }
 .lock { display:none; background:white; padding:20px; margin-top:20px; border-radius:12px; text-align:center; }
-a { color:white; }
 </style>
 </head>
 
@@ -31,40 +29,28 @@ const NOTE_URL = "https://note.com/giocarelabo_1022/n/n9d85f96b94ac";
 
 <div class="note">
 <b>これ知らないと利益出ません👇</b><br>
-<a id="noteTop" target="_blank">▶ 仕入れ先＆完全攻略はこちら（500円）</a>
+<a id="noteTop" target="_blank">▶ 仕入れ先はこちら</a>
 </div>
 
-<h2>🔥 今売れてる商品ランキング（直近24時間）</h2>
+<h2>🔥 トレンドランキング（直近24時間）</h2>
 
 <div class="countdown">
 ⏳ 残り <span id="timer">03:00</span>
 </div>
 
-<p style="color:red;">※1回のみ閲覧可能 / 購入者のみ再閲覧可能</p>
-
-<button class="main" id="btn">🚀 トレンド取得する</button>
+<button class="main" id="btn">🚀 トレンド取得</button>
 
 <div id="result"></div>
 
 <div id="lock" class="lock">
-<p style="color:red;"><b>🔒 この端末はロックされています</b></p>
+<p><b>🔒 この端末はロックされています</b></p>
 
-<p>
-※既に1度閲覧されています<br>
-※購入者のみ解除可能です
-</p>
-
-<a id="noteLock" target="_blank">▶ 今すぐ解除する（500円）</a>
+<a id="noteLock" target="_blank">▶ 解除はこちら</a>
 
 <br><br>
-<input type="password" id="pass" placeholder="購入者パスワード">
+<input type="password" id="pass">
 <br><br>
 <button onclick="unlock()">解除</button>
-</div>
-
-<div class="note" style="margin-top:20px;">
-<b>具体的な仕入れ先はこちら👇</b><br>
-<a id="noteBottom" target="_blank">▶ 詳細を見る</a>
 </div>
 
 <script>
@@ -72,16 +58,11 @@ const NOTE_URL = "https://note.com/giocarelabo_1022/n/n9d85f96b94ac";
 // ===== noteリンク =====
 document.getElementById("noteTop").href = NOTE_URL;
 document.getElementById("noteLock").href = NOTE_URL;
-document.getElementById("noteBottom").href = NOTE_URL;
-
-// ===== 端末ID生成 =====
-if (!localStorage.getItem("deviceId")) {
-  localStorage.setItem("deviceId", "dev-" + Math.random().toString(36).substr(2, 9));
-}
 
 // ===== 初期化 =====
 const LIMIT = 180;
 
+// ★ startは絶対1回だけ
 if (!localStorage.getItem("start")) {
   localStorage.setItem("start", Date.now());
 }
@@ -90,47 +71,52 @@ if (!localStorage.getItem("start")) {
 function timer(){
   const start = Number(localStorage.getItem("start"));
   const now = Date.now();
-  const remain = LIMIT - Math.floor((now-start)/1000);
+
+  const remain = LIMIT - Math.floor((now - start) / 1000);
 
   if(remain <= 0){
-    lockUI();
     document.getElementById("timer").innerText = "00:00";
+    forceLock();
     return;
   }
 
   const m = String(Math.floor(remain/60)).padStart(2,'0');
   const s = String(remain%60).padStart(2,'0');
-  document.getElementById("timer").innerText = m+":"+s;
+
+  document.getElementById("timer").innerText = m + ":" + s;
 }
 
 setInterval(timer,1000);
 timer();
 
-// ===== ロック =====
-function lockUI(){
-  localStorage.setItem("permanentlyLocked","true");
+// ===== 強制ロック =====
+function forceLock(){
+  localStorage.setItem("locked","true");
   document.getElementById("result").innerHTML = "";
   if(!localStorage.getItem("unlock")){
     document.getElementById("lock").style.display="block";
   }
 }
 
-// ===== 初回アクセス時にロック確認 =====
-if(localStorage.getItem("permanentlyLocked") && !localStorage.getItem("unlock")){
-  lockUI();
+// ===== ページ読み込み時ロック判定 =====
+if(localStorage.getItem("locked") && !localStorage.getItem("unlock")){
+  forceLock();
 }
 
 // ===== ボタン =====
 document.getElementById("btn").addEventListener("click", async () => {
 
-  // 永久ロック
-  if(localStorage.getItem("permanentlyLocked") && !localStorage.getItem("unlock")){
-    lockUI();
+  // 2回目 or 時間切れ
+  if(localStorage.getItem("locked") && !localStorage.getItem("unlock")){
+    forceLock();
     return;
   }
 
-  // 1回目処理
-  localStorage.setItem("permanentlyLocked","true");
+  // ★ 1回だけ許可
+  if(localStorage.getItem("used") && !localStorage.getItem("unlock")){
+    forceLock();
+    return;
+  }
 
   const result = document.getElementById("result");
   result.innerHTML = "読み込み中...";
@@ -146,17 +132,10 @@ document.getElementById("btn").addEventListener("click", async () => {
 
       html += `
       <div class="card">
-        <div class="rank">#${i+1} 急上昇</div>
+        <div class="rank">#${i+1}</div>
         <div><b>${item.trend}</b></div>
-        <div class="badge">直近24時間で売上急増</div>
-
-        <div style="margin-top:10px;">
-          仕入れ ${item.m_price}円 → 販売 ${item.a_price}円
-        </div>
-
-        <div class="profit">
-          想定利益 +${item.profit}円
-        </div>
+        <div>${item.m_price}円 → ${item.a_price}円</div>
+        <div class="profit">+${item.profit}円</div>
 
         <button class="btn copy" onclick="copyText('${item.trend}')">コピー</button>
         <button class="btn amazon" onclick="window.open('https://www.amazon.co.jp/s?k=${kw}')">Amazon</button>
@@ -165,6 +144,9 @@ document.getElementById("btn").addEventListener("click", async () => {
     });
 
     result.innerHTML = html;
+
+    // ★ 成功後にロックON（ここが重要）
+    localStorage.setItem("used","true");
 
   }catch{
     result.innerHTML = "エラー";
@@ -176,11 +158,10 @@ document.getElementById("btn").addEventListener("click", async () => {
 function unlock(){
   if(document.getElementById("pass").value === "buzz2026"){
     localStorage.setItem("unlock","true");
-    localStorage.removeItem("permanentlyLocked");
     alert("解除成功");
     location.reload();
   }else{
-    alert("パスワードが違います");
+    alert("違います");
   }
 }
 
