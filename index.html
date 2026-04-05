@@ -6,29 +6,97 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body { font-family: Arial; padding:20px; max-width:600px; margin:auto; background:#f5f5f5; }
-button { width:100%; padding:15px; background:black; color:white; border:none; border-radius:10px; }
-.card { background:white; padding:15px; margin-top:15px; border-radius:12px; }
-.lock { display:none; background:white; padding:20px; margin-top:20px; border-radius:12px; text-align:center; }
-.count { background:red; color:white; padding:10px; border-radius:10px; text-align:center; }
+body {
+  font-family: Arial;
+  padding:20px;
+  max-width:600px;
+  margin:auto;
+  background:#f5f5f5;
+}
+.main {
+  width:100%;
+  padding:15px;
+  background:black;
+  color:white;
+  border-radius:10px;
+  font-size:16px;
+}
+.card {
+  background:white;
+  padding:15px;
+  margin-top:15px;
+  border-radius:12px;
+}
+.profit {
+  color:red;
+  font-weight:bold;
+}
+.btn {
+  width:100%;
+  padding:10px;
+  margin-top:8px;
+  border:none;
+  border-radius:8px;
+  color:white;
+}
+.copy { background:black; }
+.amazon { background:orange; }
+.mercari { background:red; }
+.lock {
+  display:none;
+  background:white;
+  padding:20px;
+  margin-top:20px;
+  border-radius:12px;
+  text-align:center;
+}
+.countdown {
+  background:red;
+  color:white;
+  padding:10px;
+  border-radius:10px;
+  text-align:center;
+  font-size:18px;
+}
 </style>
 </head>
 
 <body>
 
-<h2>🚨 トレンド取得ツール</h2>
+<!-- 上導線 -->
+<div style="background:black;color:white;padding:15px;border-radius:10px;text-align:center;">
+<b>仕入れ方法はこちら👇</b><br>
+<a href="https://note.com/giocarelabo_1022/n/n9d85f96b94ac" target="_blank" style="color:white;">
+▶ 今だけ500円（後日値上げ）
+</a>
+</div>
 
-<div class="count">
+<h2>🚨 今この瞬間も売れてます</h2>
+
+<div class="countdown">
 残り <span id="timer">03:00</span>
 </div>
 
-<button id="btn">トレンド取得</button>
+<p style="color:red;">
+※1回のみ閲覧可能 / 2回目または時間切れでロック
+</p>
+
+<button class="main" id="btn">🔥 トレンド取得</button>
 
 <div id="result"></div>
 
+<!-- ロック -->
 <div id="lock" class="lock">
-<p>🔒 ロックされています</p>
-<input type="password" id="pass">
+<p><b>🔒 閲覧制限中</b></p>
+<p style="color:red;">続きは購入者のみ閲覧できます</p>
+
+<a href="https://note.com/giocarelabo_1022/n/n9d85f96b94ac" target="_blank">
+▶ 解除はこちら（500円）
+</a>
+
+<br><br>
+<input type="password" id="pass" placeholder="パスワード">
+<br><br>
 <button onclick="unlock()">解除</button>
 </div>
 
@@ -37,17 +105,21 @@ button { width:100%; padding:15px; background:black; color:white; border:none; b
 // ===== 初期化 =====
 const LIMIT = 180;
 
-// ★ 初回だけ時間セット
+// 初回のみ開始時間
 if (!localStorage.getItem("start")) {
   localStorage.setItem("start", Date.now());
 }
 
+// 初回フラグ
+if (!localStorage.getItem("firstViewDone")) {
+  localStorage.setItem("firstViewDone", "false");
+}
+
 // ===== タイマー =====
-function timer(){
+function updateTimer(){
 
   const start = Number(localStorage.getItem("start"));
   const now = Date.now();
-
   const diff = Math.floor((now - start)/1000);
   const remain = LIMIT - diff;
 
@@ -55,8 +127,8 @@ function timer(){
 
   if(remain <= 0){
     el.innerText = "00:00";
-    localStorage.setItem("lock","true");
-    document.getElementById("lock").style.display="block";
+    localStorage.setItem("locked","true");
+    showLock();
     return;
   }
 
@@ -66,26 +138,35 @@ function timer(){
   el.innerText = m + ":" + s;
 }
 
-// 即実行＋ループ
-timer();
-setInterval(timer,1000);
+setInterval(updateTimer,1000);
+updateTimer();
 
-// ===== ボタンイベント（これが重要）=====
+// ===== ロック表示 =====
+function showLock(){
+  if(!localStorage.getItem("unlocked")){
+    document.getElementById("lock").style.display="block";
+  }
+}
+
+// ===== ボタン =====
 document.getElementById("btn").addEventListener("click", async () => {
 
-  // ロック
-  if(localStorage.getItem("lock") && !localStorage.getItem("unlock")){
-    document.getElementById("lock").style.display="block";
+  // 時間ロック
+  if(localStorage.getItem("locked") && !localStorage.getItem("unlocked")){
+    showLock();
     return;
   }
 
-  // 1回制限
-  if(localStorage.getItem("used") && !localStorage.getItem("unlock")){
-    document.getElementById("lock").style.display="block";
+  const firstDone = localStorage.getItem("firstViewDone");
+
+  // ★ 2回目ロック
+  if(firstDone === "true" && !localStorage.getItem("unlocked")){
+    showLock();
     return;
   }
 
-  localStorage.setItem("used","true");
+  // 1回目フラグON
+  localStorage.setItem("firstViewDone","true");
 
   const result = document.getElementById("result");
   result.innerHTML = "読み込み中...";
@@ -97,11 +178,19 @@ document.getElementById("btn").addEventListener("click", async () => {
     let html = "";
 
     data.forEach((item,i)=>{
+
+      const kw = encodeURIComponent(item.trend);
+
       html += `
       <div class="card">
-        <b>${item.trend}</b><br>
-        ${item.m_price}円 → ${item.a_price}円<br>
-        利益 +${item.profit}円
+        <div>#${i+1} 人気急上昇</div>
+        <div><b>${item.trend}</b></div>
+        <div>仕入れ ${item.m_price}円 → 販売 ${item.a_price}円</div>
+        <div class="profit">利益 +${item.profit}円</div>
+
+        <button class="btn copy" onclick="copyText('${item.trend}')">コピー</button>
+        <button class="btn amazon" onclick="openAmazon('${kw}')">Amazon</button>
+        <button class="btn mercari" onclick="openMercari('${kw}')">メルカリ</button>
       </div>
       `;
     });
@@ -109,7 +198,7 @@ document.getElementById("btn").addEventListener("click", async () => {
     result.innerHTML = html;
 
   }catch{
-    result.innerHTML = "エラー";
+    result.innerHTML = "エラー発生";
   }
 
 });
@@ -118,13 +207,18 @@ document.getElementById("btn").addEventListener("click", async () => {
 function unlock(){
 
   if(document.getElementById("pass").value === "buzz2026"){
-    localStorage.setItem("unlock","true");
+    localStorage.setItem("unlocked","true");
     document.getElementById("lock").style.display="none";
     alert("解除成功");
   }else{
-    alert("違います");
+    alert("パスワード違います");
   }
 }
+
+// ===== その他 =====
+function copyText(t){ navigator.clipboard.writeText(t); }
+function openAmazon(k){ window.open(`https://www.amazon.co.jp/s?k=${k}`); }
+function openMercari(k){ window.open(`https://www.mercari.com/jp/search/?keyword=${k}`); }
 
 </script>
 
