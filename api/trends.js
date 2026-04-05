@@ -1,28 +1,36 @@
-export default function handler(req, res) {
-  const trends = [
-    "大谷翔平 グッズ",
-    "ポケモンカード 151",
-    "PS5 コントローラー",
-    "無印良品 収納ケース",
-    "ナイキ エアフォース1",
-    "スターバックス タンブラー",
-    "ユニクロ エアリズム",
-    "iPhone15 ケース",
-    "ワンピース フィギュア",
-    "任天堂スイッチ 本体"
+export default async function handler(req, res) {
+
+  const items = [
+    "ワイヤレスイヤホン",
+    "ゲーミングマウス",
+    "モバイルバッテリー",
+    "スマートウォッチ",
+    "ネッククーラー",
+    "電動歯ブラシ",
+    "小型プロジェクター",
+    "Bluetoothスピーカー",
+    "タブレットスタンド",
+    "LEDリングライト",
+    "ノイズキャンセリングイヤホン",
+    "充電式ハンディファン"
   ];
 
-  const results = trends.map(t => {
-    const m_price = Math.floor(Math.random() * 4000) + 1000;
-    const a_price = m_price + Math.floor(Math.random() * 4000) + 1000;
+  // シャッフル
+  const shuffled = items.sort(() => 0.5 - Math.random()).slice(0,5);
+
+  const data = shuffled.map(name => {
+
+    const m = Math.floor(Math.random() * 3000) + 1500; // 1500〜4500
+    const a = m + Math.floor(Math.random() * 5000) + 2000; // 上乗せ
+    const profit = a - m;
 
     return {
-      trend: t,
-      m_price,
-      a_price,
-      profit: a_price - m_price
+      trend: name,
+      m_price: m,
+      a_price: a,
+      profit: profit
     };
   });
 
-  res.status(200).json(results);
+  res.status(200).json(data);
 }

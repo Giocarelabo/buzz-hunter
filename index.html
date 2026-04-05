@@ -2,31 +2,13 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Buzz Hunter｜利益商品発見ツール</title>
+<title>Buzz Hunter</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body {
-  font-family: Arial;
-  padding: 20px;
-  max-width: 600px;
-  margin: auto;
-  background: #f5f5f5;
-}
-button.main {
-  width: 100%;
-  padding: 15px;
-  font-size: 16px;
-  background: black;
-  color: white;
-  border-radius: 10px;
-}
-.card {
-  background: white;
-  padding: 15px;
-  margin-top: 15px;
-  border-radius: 12px;
-}
+body { font-family: Arial; padding:20px; max-width:600px; margin:auto; background:#f5f5f5; }
+button.main { width:100%; padding:15px; background:black; color:white; border-radius:10px; }
+.card { background:white; padding:15px; margin-top:15px; border-radius:12px; }
 .profit { color:red; font-weight:bold; }
 .btn { width:100%; padding:10px; margin-top:8px; border:none; border-radius:8px; color:white; }
 .copy { background:black; }
@@ -41,7 +23,7 @@ button.main {
 
 <!-- 上導線 -->
 <div style="background:black;color:white;padding:15px;border-radius:10px;text-align:center;">
-<b>この商品の仕入れ方法はこちら👇</b><br>
+<b>仕入れ方法はこちら👇</b><br>
 <a href="https://note.com/giocarelabo_1022/n/n9d85f96b94ac" target="_blank" style="color:white;">
 ▶ 今だけ500円（後日値上げ）
 </a>
@@ -50,28 +32,25 @@ button.main {
 <h2>🚨 今この瞬間も売れてます</h2>
 
 <div class="countdown">
-残り <span id="timer">03:00</span> で終了
+残り <span id="timer">03:00</span>
 </div>
 
-<p style="color:red;">
-※時間終了後は閲覧不可になります
-</p>
+<p style="color:red;">※時間終了後は閲覧不可</p>
 
-<button class="main" onclick="getTrends()">
-🔥 トレンド商品を取得する
-</button>
+<button class="main" onclick="getTrends()">🔥 トレンド取得</button>
 
 <div id="result"></div>
 
 <!-- ロック -->
 <div id="lockArea" class="lock" style="display:none;">
-<p><b>🔒 閲覧制限中</b></p>
-<p style="color:red;">この情報は時間制限でロックされました</p>
+<p><b>🔒 制限中</b></p>
+<p style="color:red;">この情報はロックされました</p>
 
-<a href="https://note.com/giocarelabo_1022/n/n9d85f96b94ac" target="_blank">
-▶ 今すぐ解除（500円）
-</a><br><br>
+<a href="https://note.com/あなたのURL" target="_blank">
+▶ 解除はこちら（500円）
+</a>
 
+<br><br>
 <input type="password" id="pass">
 <br><br>
 <button onclick="unlock()">解除</button>
@@ -79,20 +58,30 @@ button.main {
 
 <!-- 下導線 -->
 <div style="background:black;color:white;padding:20px;margin-top:20px;border-radius:12px;text-align:center;">
-<b>稼ぎ方の完全解説はこちら👇</b><br>
+<b>完全解説はこちら👇</b><br>
 <a href="https://note.com/giocarelabo_1022/n/n9d85f96b94ac" target="_blank" style="color:white;">
-▶ 500円で全手順を見る
+▶ 稼ぎ方を見る
 </a>
 </div>
 
 <script>
-// ===== 時間制御 =====
-const LIMIT = 180; // 3分
+
+// ===== 時間管理（完全ロック） =====
+const LIMIT = 180;
+
 let start = localStorage.getItem("startTime");
 
 if (!start) {
   start = Date.now();
   localStorage.setItem("startTime", start);
+}
+
+function checkLock(){
+  const now = Date.now();
+  const diff = Math.floor((now - start)/1000);
+  if(diff >= LIMIT){
+    localStorage.setItem("locked","true");
+  }
 }
 
 function updateTimer(){
@@ -102,7 +91,7 @@ function updateTimer(){
 
   if(remain <= 0){
     document.getElementById("timer").innerText = "00:00";
-    localStorage.setItem("locked","true");
+    document.getElementById("lockArea").style.display="block";
     return;
   }
 
@@ -110,7 +99,11 @@ function updateTimer(){
   let s = String(remain%60).padStart(2,'0');
   document.getElementById("timer").innerText = m+":"+s;
 }
-setInterval(updateTimer,1000);
+
+setInterval(()=>{
+  checkLock();
+  updateTimer();
+},1000);
 
 // ===== トレンド取得 =====
 async function getTrends(){
@@ -131,58 +124,46 @@ async function getTrends(){
 
     data.forEach((item,i)=>{
 
-      // ★ 現実的価格補正
-      let m = Math.floor(Math.random()*3000)+1000;
-      let a = m + Math.floor(Math.random()*4000)+1500;
-      let p = a - m;
-
       const kw = encodeURIComponent(item.trend);
 
       html += `
       <div class="card">
-
       <div>#${i+1} 人気急上昇</div>
-
-      <div style="font-weight:bold;">
-      ${item.trend}
-      </div>
-
-      <div>仕入れ ${m}円 → 販売 ${a}円</div>
-
-      <div class="profit">利益 +${p}円</div>
-
-      <p style="color:red;">
-      → 今すぐ検索しないと在庫なくなります
-      </p>
+      <div><b>${item.trend}</b></div>
+      <div>仕入れ ${item.m_price}円 → 販売 ${item.a_price}円</div>
+      <div class="profit">利益 +${item.profit}円</div>
 
       <button class="btn copy" onclick="copyText('${item.trend}')">コピー</button>
       <button class="btn amazon" onclick="openAmazon('${kw}')">Amazon</button>
       <button class="btn mercari" onclick="openMercari('${kw}')">メルカリ</button>
-
       </div>`;
     });
 
     result.innerHTML = html;
 
   }catch{
-    result.innerHTML="エラー";
+    result.innerHTML="エラー発生";
+  }
+}
+
+// ===== パスワード =====
+function unlock(){
+  const correct = "buzz2026"; // ←購入者に配布
+
+  if(document.getElementById("pass").value === correct){
+    localStorage.setItem("unlocked","true");
+    alert("解除成功");
+    document.getElementById("lockArea").style.display="none";
+  }else{
+    alert("パスワード違います");
   }
 }
 
 // ===== その他 =====
-function unlock(){
-  if(document.getElementById("pass").value==="1234"){
-    localStorage.setItem("unlocked","true");
-    alert("解除成功");
-  }else{
-    alert("違います");
-  }
-}
-
 function copyText(t){ navigator.clipboard.writeText(t); }
-
 function openAmazon(k){ window.open(`https://www.amazon.co.jp/s?k=${k}`); }
 function openMercari(k){ window.open(`https://www.mercari.com/jp/search/?keyword=${k}`); }
+
 </script>
 
 </body>
