@@ -6,144 +6,99 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body {
-  font-family: Arial;
-  padding:20px;
-  max-width:600px;
-  margin:auto;
-  background:#f5f5f5;
-}
-.main {
-  width:100%;
-  padding:15px;
-  background:black;
-  color:white;
-  border-radius:10px;
-  font-size:16px;
-}
-.card {
-  background:white;
-  padding:15px;
-  margin-top:15px;
-  border-radius:12px;
-}
-.profit {
-  color:red;
-  font-weight:bold;
-}
-.btn {
-  width:100%;
-  padding:10px;
-  margin-top:8px;
-  border:none;
-  border-radius:8px;
-  color:white;
-}
+body { font-family: Arial; padding:20px; max-width:600px; margin:auto; background:#f5f5f5; }
+.main { width:100%; padding:15px; background:black; color:white; border-radius:10px; }
+.card { background:white; padding:15px; margin-top:15px; border-radius:12px; }
+.profit { color:red; font-weight:bold; }
+.btn { width:100%; padding:10px; margin-top:8px; border:none; border-radius:8px; color:white; }
 .copy { background:black; }
 .amazon { background:orange; }
 .mercari { background:red; }
-.lock {
-  display:none;
-  background:white;
-  padding:20px;
-  margin-top:20px;
-  border-radius:12px;
-  text-align:center;
-}
-.countdown {
-  background:red;
-  color:white;
-  padding:10px;
-  border-radius:10px;
-  text-align:center;
-  font-size:18px;
-}
+.lock { display:none; background:white; padding:20px; margin-top:20px; border-radius:12px; text-align:center; }
+.countdown { background:red; color:white; padding:10px; border-radius:10px; text-align:center; }
+.note { background:black; color:white; padding:15px; border-radius:10px; text-align:center; margin-bottom:15px; }
+a { color:white; }
 </style>
 </head>
 
 <body>
 
-<!-- 上導線 -->
-<div style="background:black;color:white;padding:15px;border-radius:10px;text-align:center;">
+<script>
+// ★ ここだけ変更
+const NOTE_URL = "https://note.com/giocarelabo_1022/n/n9d85f96b94ac";
+</script>
+
+<div class="note">
 <b>仕入れ方法はこちら👇</b><br>
-<a href="https://note.com/giocarelabo_1022/n/n9d85f96b94ac" target="_blank" style="color:white;">
-▶ 今だけ500円（後日値上げ）
-</a>
+<a id="noteTop" target="_blank">▶ 今だけ500円</a>
 </div>
 
-<h2>🚨 今この瞬間も売れてます</h2>
+<h2>🚨 トレンド取得ツール</h2>
 
 <div class="countdown">
 残り <span id="timer">03:00</span>
 </div>
 
-<p style="color:red;">
-※1回のみ閲覧可能 / 2回目または時間切れでロック
-</p>
-
 <button class="main" id="btn">🔥 トレンド取得</button>
 
 <div id="result"></div>
 
-<!-- ロック -->
 <div id="lock" class="lock">
-<p><b>🔒 閲覧制限中</b></p>
-<p style="color:red;">続きは購入者のみ閲覧できます</p>
+<p>🔒 続きは有料です</p>
 
-<a href="https://note.com/giocarelabo_1022/n/n9d85f96b94ac" target="_blank">
-▶ 解除はこちら（500円）
-</a>
+<a id="noteLock" target="_blank">▶ 解除はこちら</a>
 
 <br><br>
-<input type="password" id="pass" placeholder="パスワード">
+<input type="password" id="pass">
 <br><br>
 <button onclick="unlock()">解除</button>
 </div>
 
+<div class="note" style="margin-top:20px;">
+<b>完全攻略はこちら👇</b><br>
+<a id="noteBottom" target="_blank">▶ 詳細を見る</a>
+</div>
+
 <script>
+
+// ===== noteリンク自動セット =====
+document.getElementById("noteTop").href = NOTE_URL;
+document.getElementById("noteLock").href = NOTE_URL;
+document.getElementById("noteBottom").href = NOTE_URL;
 
 // ===== 初期化 =====
 const LIMIT = 180;
 
-// 初回のみ開始時間
-if (!localStorage.getItem("start")) {
+if (!sessionStorage.getItem("init")) {
+  sessionStorage.setItem("init","true");
+  localStorage.clear();
   localStorage.setItem("start", Date.now());
 }
 
-// 初回フラグ
-if (!localStorage.getItem("firstViewDone")) {
-  localStorage.setItem("firstViewDone", "false");
-}
-
 // ===== タイマー =====
-function updateTimer(){
-
+function timer(){
   const start = Number(localStorage.getItem("start"));
   const now = Date.now();
-  const diff = Math.floor((now - start)/1000);
-  const remain = LIMIT - diff;
-
-  const el = document.getElementById("timer");
+  const remain = LIMIT - Math.floor((now-start)/1000);
 
   if(remain <= 0){
-    el.innerText = "00:00";
-    localStorage.setItem("locked","true");
+    document.getElementById("timer").innerText = "00:00";
+    localStorage.setItem("lock","true");
     showLock();
     return;
   }
 
   const m = String(Math.floor(remain/60)).padStart(2,'0');
   const s = String(remain%60).padStart(2,'0');
-
-  el.innerText = m + ":" + s;
+  document.getElementById("timer").innerText = m+":"+s;
 }
 
-setInterval(updateTimer,1000);
-updateTimer();
+setInterval(timer,1000);
+timer();
 
-// ===== ロック表示 =====
+// ===== ロック =====
 function showLock(){
-  if(!localStorage.getItem("unlocked")){
+  if(!localStorage.getItem("unlock")){
     document.getElementById("lock").style.display="block";
   }
 }
@@ -151,22 +106,17 @@ function showLock(){
 // ===== ボタン =====
 document.getElementById("btn").addEventListener("click", async () => {
 
-  // 時間ロック
-  if(localStorage.getItem("locked") && !localStorage.getItem("unlocked")){
+  if(localStorage.getItem("lock") && !localStorage.getItem("unlock")){
     showLock();
     return;
   }
 
-  const firstDone = localStorage.getItem("firstViewDone");
-
-  // ★ 2回目ロック
-  if(firstDone === "true" && !localStorage.getItem("unlocked")){
+  if(localStorage.getItem("used") && !localStorage.getItem("unlock")){
     showLock();
     return;
   }
 
-  // 1回目フラグON
-  localStorage.setItem("firstViewDone","true");
+  localStorage.setItem("used","true");
 
   const result = document.getElementById("result");
   result.innerHTML = "読み込み中...";
@@ -176,49 +126,44 @@ document.getElementById("btn").addEventListener("click", async () => {
     const data = await res.json();
 
     let html = "";
-
     data.forEach((item,i)=>{
-
       const kw = encodeURIComponent(item.trend);
 
       html += `
       <div class="card">
-        <div>#${i+1} 人気急上昇</div>
-        <div><b>${item.trend}</b></div>
-        <div>仕入れ ${item.m_price}円 → 販売 ${item.a_price}円</div>
-        <div class="profit">利益 +${item.profit}円</div>
+        <b>${item.trend}</b><br>
+        ${item.m_price}円 → ${item.a_price}円<br>
+        <div class="profit">+${item.profit}円</div>
 
         <button class="btn copy" onclick="copyText('${item.trend}')">コピー</button>
-        <button class="btn amazon" onclick="openAmazon('${kw}')">Amazon</button>
-        <button class="btn mercari" onclick="openMercari('${kw}')">メルカリ</button>
-      </div>
-      `;
+        <button class="btn amazon" onclick="window.open('https://www.amazon.co.jp/s?k=${kw}')">Amazon</button>
+        <button class="btn mercari" onclick="window.open('https://www.mercari.com/jp/search/?keyword=${kw}')">メルカリ</button>
+      </div>`;
     });
 
     result.innerHTML = html;
 
   }catch{
-    result.innerHTML = "エラー発生";
+    result.innerHTML = "エラー";
   }
 
 });
 
-// ===== パスワード =====
+// ===== パス =====
 function unlock(){
-
   if(document.getElementById("pass").value === "buzz2026"){
-    localStorage.setItem("unlocked","true");
+    localStorage.setItem("unlock","true");
     document.getElementById("lock").style.display="none";
     alert("解除成功");
   }else{
-    alert("パスワード違います");
+    alert("違います");
   }
 }
 
-// ===== その他 =====
-function copyText(t){ navigator.clipboard.writeText(t); }
-function openAmazon(k){ window.open(`https://www.amazon.co.jp/s?k=${k}`); }
-function openMercari(k){ window.open(`https://www.mercari.com/jp/search/?keyword=${k}`); }
+// ===== コピー =====
+function copyText(t){
+  navigator.clipboard.writeText(t);
+}
 
 </script>
 
