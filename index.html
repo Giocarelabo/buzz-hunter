@@ -77,14 +77,13 @@ if (!sessionStorage.getItem("init")) {
 
 // ===== タイマー =====
 function timer(){
-
   const start = Number(localStorage.getItem("start"));
   const now = Date.now();
   const remain = LIMIT - Math.floor((now-start)/1000);
 
   if(remain <= 0){
     document.getElementById("timer").innerText = "00:00";
-    lockUI(); // ★ここ重要
+    forceLock();
     return;
   }
 
@@ -97,14 +96,11 @@ function timer(){
 setInterval(timer,1000);
 timer();
 
-// ===== ロックUI強制 =====
-function lockUI(){
+// ===== 強制ロック =====
+function forceLock(){
   localStorage.setItem("lock","true");
-
-  // 結果を消す
   document.getElementById("result").innerHTML = "";
 
-  // ロック表示
   if(!localStorage.getItem("unlock")){
     document.getElementById("lock").style.display="block";
   }
@@ -113,18 +109,18 @@ function lockUI(){
 // ===== ボタン =====
 document.getElementById("btn").addEventListener("click", async () => {
 
-  // 時間 or 2回目ならロック表示（ボタンは押せる）
+  // ★ ここで完全ガード（最重要）
   if(localStorage.getItem("lock") && !localStorage.getItem("unlock")){
-    lockUI();
+    forceLock();
     return;
   }
 
   if(localStorage.getItem("used") && !localStorage.getItem("unlock")){
-    lockUI();
+    forceLock();
     return;
   }
 
-  // 初回実行
+  // 初回だけ通す
   localStorage.setItem("used","true");
 
   const result = document.getElementById("result");
@@ -132,6 +128,13 @@ document.getElementById("btn").addEventListener("click", async () => {
 
   try{
     const res = await fetch('/api/trends');
+
+    // ★ ここでも安全確認（競合防止）
+    if(localStorage.getItem("lock") && !localStorage.getItem("unlock")){
+      forceLock();
+      return;
+    }
+
     const data = await res.json();
 
     let html = "";
